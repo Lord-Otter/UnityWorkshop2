@@ -32,13 +32,18 @@ public class PlatformerMovement : MonoBehaviour
     private bool isGrounded;
 
     [SerializeField] private Animator animator;
-    
+    private AudioSource audioSource;
+    [SerializeField] private AudioClip jumpSFX;
+    [SerializeField] private AudioClip landSFX;
+        
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         
         groundCheckCollider = GetComponent<CircleCollider2D>();
         groundCheckCollider.isTrigger = true;
+
+        audioSource = GetComponent<AudioSource>();
         
         // Set gravity scale to 0 so player won't "fall" 
         rb.gravityScale = 0;
@@ -67,6 +72,7 @@ public class PlatformerMovement : MonoBehaviour
             else
             {
                 // Has jumped. Play jump sound and/or trigger jump animation etc
+                PlaySFX(jumpSFX);
             }
         }
         // Check if character gained contact with ground this frame
@@ -74,9 +80,10 @@ public class PlatformerMovement : MonoBehaviour
         {
             jumpReleased = false;
             // Has landed, play landing sound and trigger landing animation
+            PlaySFX(landSFX);
         }
         wasGrounded = isGrounded;
-        
+
         // Flip sprite according to direction (if a sprite renderer has been assigned)
         if (spriteRenderer)
         {
@@ -85,6 +92,14 @@ public class PlatformerMovement : MonoBehaviour
             else if (moveInput.x < -0.01f)
                 spriteRenderer.flipX = true;
         }
+        
+        // Write movement animation code here. (Suggestion: send your current velocity into the Animator for both the x- and y-axis.)
+        if (animator != null)
+        {
+            animator.SetFloat("velocityX", Mathf.Abs(velocity.x));
+            animator.SetFloat("velocityY", velocity.y);
+            animator.SetBool("isGrounded", isGrounded);
+        }
     }
 
     private void FixedUpdate()
@@ -92,8 +107,6 @@ public class PlatformerMovement : MonoBehaviour
         isGrounded = IsGrounded();
         ApplyGravity();
         rb.linearVelocity = velocity;
-        
-        // Write movement animation code here. (Suggestion: send your current velocity into the Animator for both the x- and y-axis.)
     }
 
     private bool IsGrounded()
@@ -174,6 +187,14 @@ public class PlatformerMovement : MonoBehaviour
         {
             jumpReleased = true;
             jumpInput = false;
+        }
+    }
+
+    private void PlaySFX(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
         }
     }
 }
